@@ -89,6 +89,7 @@ if uploaded_file is not None:
                 summary_table = pd.concat([summary_table, pd.DataFrame([{
                     'Day': date,
                     'ACCOUNTS': accounts,
+                    'TOTAL COLLECTORS': total_collectors,
                     'TOTAL DIALED': total_dialed,
                     'PENETRATION RATE (%)': f"{round(penetration_rate)}%" if penetration_rate is not None else None,
                     'CONNECTED #': connected,
@@ -193,20 +194,21 @@ if uploaded_file is not None:
             call_drop_ratio = (call_drop_count / connected_acc * 100) if connected_acc != 0 else None
 
             summary_table = pd.concat([summary_table, pd.DataFrame([{
-                'TOTAL COLLECTORS': total_collectors,
-                'ACCOUNTS': accounts,
-                'TOTAL DIALED': total_dialed,
-                'PENETRATION RATE (%)': f"{round(penetration_rate)}%" if penetration_rate is not None else None,
-                'CONNECTED #': connected,
-                'CONNECTED RATE (%)': f"{round(connected_rate)}%" if connected_rate is not None else None,
-                'CONNECTED ACC': connected_acc,
-                'PTP ACC': ptp_acc,
-                'PTP RATE': f"{round(ptp_rate)}%" if ptp_rate is not None else None,
-                'TOTAL PTP AMOUNT': total_ptp_amount,
-                'TOTAL BALANCE': total_balance,
-                'CALL DROP #': call_drop_count,
-                'SYSTEM DROP': system_drop,
-                'CALL DROP RATIO #': f"{round(call_drop_ratio)}%" if call_drop_ratio is not None else None,
+                    'Day': date,
+                    'ACCOUNTS': accounts,
+                    'TOTAL COLLECTORS': total_collectors,
+                    'TOTAL DIALED': total_dialed,
+                    'PENETRATION RATE (%)': f"{round(penetration_rate)}%" if penetration_rate is not None else None,
+                    'CONNECTED #': connected,
+                    'CONNECTED RATE (%)': f"{round(connected_rate)}%" if connected_rate is not None else None,
+                    'CONNECTED ACC': connected_acc,
+                    'PTP ACC': ptp_acc,
+                    'PTP RATE': f"{round(ptp_rate)}%" if ptp_rate is not None else None,
+                    'TOTAL PTP AMOUNT': total_ptp_amount,
+                    'TOTAL BALANCE': total_balance,
+                    'CALL DROP #': call_drop_count,
+                    'SYSTEM DROP': system_drop,
+                    'CALL DROP RATIO #': f"{round(call_drop_ratio)}%" if call_drop_ratio is not None else None,
             }])], ignore_index=True)
 
             return summary_table
