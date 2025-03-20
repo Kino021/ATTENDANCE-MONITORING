@@ -47,7 +47,7 @@ uploaded_file = st.sidebar.file_uploader("Upload Daily Remark File", type="xlsx"
 if uploaded_file:
     df = load_data(uploaded_file)
     if df is not None:
-         # Initialize an empty DataFrame for the summary table by collector
+        # Initialize an empty DataFrame for the summary table by collector
         collector_summary = pd.DataFrame(columns=[ 
             'Day', 'Collector', 'Client', 'Manual Accounts', 'Total Manual Calls', 'Predictive Accounts', 'Predictive Dial', 'Total Connected', 'Total PTP', 'Total RPC', 'PTP Amount', 'Balance Amount', 'Total Talk Time'
         ])
@@ -63,7 +63,7 @@ if uploaded_file:
             return f"{int(hours):02}:{int(minutes):02}:{int(seconds):02}"
 
         # Group by 'Date', 'Remark By' (Collector), and 'Client' (Campaign)
-        for (date, collector, client), collector_group in filtered_df[~filtered_df['Remark By'].str.upper().isin(['SYSTEM'])].groupby([filtered_df['Date'].dt.date, 'Remark By', 'Client']):
+        for (date, collector, client), collector_group in df[~df['Remark By'].str.upper().isin(['SYSTEM'])].groupby([df['Date'].dt.date, 'Remark By', 'Client']):
 
             # Calculate the metrics
             total_connected = collector_group[collector_group['Call Status'] == 'CONNECTED']['Account No.'].count()
