@@ -26,6 +26,15 @@ st.title('Daily Remark Summary')
 def load_data(uploaded_file):
     df = pd.read_excel(uploaded_file)
 
+    # Print the column names to debug
+    st.write("Column names in the uploaded file:")
+    st.write(df.columns)
+
+    # Check if 'Date' column exists, and if not, print all columns
+    if 'Date' not in df.columns:
+        st.error("The 'Date' column was not found in the file. Please check the column names.")
+        return None
+
     # Convert 'Date' to datetime if it isn't already
     df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
 
@@ -38,38 +47,38 @@ uploaded_file = st.sidebar.file_uploader("Upload Daily Remark File", type="xlsx"
 
 if uploaded_file:
     df = load_data(uploaded_file)
+    if df is not None:
+        # Proceed with the rest of the logic
+        df['Date'] = df['Date'].dt.date
 
-    # Extract "Date"
-    df['Date'] = df['Date'].dt.date
+        # Extract "Collector" (only first name part)
+        df['Collector'] = df['Collector'].str.split().str[0]
 
-    # Extract "Collector" (only first name part)
-    df['Collector'] = df['Collector'].str.split().str[0]
+        # Filter "Access" column to only include the required types
+        valid_access = ["Collector (All Accounts)", "Collector", "Collector (All Accounts No SMS and Email)"]
+        df = df[df['Access'].isin(valid_access)]
 
-    # Filter "Access" column to only include the required types
-    valid_access = ["Collector (All Accounts)", "Collector", "Collector (All Accounts No SMS and Email)"]
-    df = df[df['Access'].isin(valid_access)]
+        # Extract "First Log In Time" and convert it to just the time (HH:MM:SS format)
+        df['First Login Time'] = pd.to_datetime(df['First Login Time'], errors='coerce').dt.strftime('%H:%M:%S')
 
-    # Extract "First Log In Time" and convert it to just the time (HH:MM:SS format)
-    df['First Login Time'] = pd.to_datetime(df['First Login Time'], errors='coerce').dt.strftime('%H:%M:%S')
+        # Define function to determine if "On Time" or "Late"
+        def get_on_time_status(first_login_time):
+            time_obj = datetime.strptime(first_login_time, '%H:%M:%S')
+            if 0 <= time_obj.hour < 8 or (time_obj.hour == 8 and time_obj.minute == 0):
+                return "ON TIME"
+            elif (time_obj.hour == 8 and time_obj.minute > 0) or (time_obj.hour == 9 and time_obj.minute < 30):
+                return "LATE"
+            elif 9 < time_obj.hour < 10 or (time_obj.hour == 9 and time_obj.minute >= 30):
+                return "ON TIME"
+            else:
+                return "LATE"
 
-    # Define function to determine if "On Time" or "Late"
-    def get_on_time_status(first_login_time):
-        time_obj = datetime.strptime(first_login_time, '%H:%M:%S')
-        if 0 <= time_obj.hour < 8 or (time_obj.hour == 8 and time_obj.minute == 0):
-            return "ON TIME"
-        elif (time_obj.hour == 8 and time_obj.minute > 0) or (time_obj.hour == 9 and time_obj.minute < 30):
-            return "LATE"
-        elif 9 < time_obj.hour < 10 or (time_obj.hour == 9 and time_obj.minute >= 30):
-            return "ON TIME"
-        else:
-            return "LATE"
+        # Apply the "On Time or Late" function
+        df['On Time or Late'] = df['First Login Time'].apply(get_on_time_status)
 
-    # Apply the "On Time or Late" function
-    df['On Time or Late'] = df['First Login Time'].apply(get_on_time_status)
+        # Create the summary table with the selected columns
+        summary_table = df[['Date', 'Collector', 'Access', 'First Login Time', 'On Time or Late']]
 
-    # Create the summary table with the selected columns
-    summary_table = df[['Date', 'Collector', 'Access', 'First Login Time', 'On Time or Late']]
-
-    # Display the summary table
-    st.write("### Summary Table")
-    st.dataframe(summary_table)
+        # Display the summary table
+        st.write("### Summary Table")
+        st.dataframe(summary_table)
