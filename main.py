@@ -104,7 +104,7 @@ if uploaded_file is not None:
                 }])], ignore_index=True)
 
             return summary_table
-
+            
         # Display Combined Summary Table
         st.write("## Overall Combined Summary Table")
         combined_summary_table = calculate_combined_summary(df)
@@ -113,7 +113,7 @@ if uploaded_file is not None:
         # Overall Predictive Summary Table
         def calculate_predictive_summary(df):
             summary_table = pd.DataFrame(columns=[ 
-                'Day', 'ACCOUNTS', 'TOTAL DIALED', 'PENETRATION RATE (%)', 'CONNECTED #', 
+                'Day', 'TOTAL COLLECTORS', 'ACCOUNTS', 'TOTAL DIALED', 'PENETRATION RATE (%)', 'CONNECTED #', 
                 'CONNECTED RATE (%)', 'CONNECTED ACC', 'PTP ACC', 'PTP RATE', 'TOTAL PTP AMOUNT', 
                 'TOTAL BALANCE', 'CALL DROP #', 'SYSTEM DROP', 'CALL DROP RATIO #'
             ]) 
@@ -122,6 +122,9 @@ if uploaded_file is not None:
             df_filtered = df[df['Remark Type'].isin(['Predictive', 'Follow Up'])]
 
             for date, group in df_filtered.groupby(df_filtered['Date'].dt.date):
+                # Calculate total collectors by counting unique values in 'Remark By', excluding 'SYSTEM'
+                total_collectors = group[~group['Remark By'].str.contains('SYSTEM', case=False, na=False)]['Remark By'].nunique()
+                
                 accounts = group[group['Remark Type'].isin(['Predictive', 'Follow Up'])]['Account No.'].nunique()
                 total_dialed = group[group['Remark Type'].isin(['Predictive', 'Follow Up'])]['Account No.'].count()
                 connected = group[group['Call Status'] == 'CONNECTED']['Account No.'].nunique()
@@ -140,6 +143,7 @@ if uploaded_file is not None:
                 summary_table = pd.concat([summary_table, pd.DataFrame([{
                     'Day': date,
                     'ACCOUNTS': accounts,
+                    'TOTAL COLLECTORS': total_collectors,
                     'TOTAL DIALED': total_dialed,
                     'PENETRATION RATE (%)': f"{round(penetration_rate)}%" if penetration_rate is not None else None,
                     'CONNECTED #': connected,
