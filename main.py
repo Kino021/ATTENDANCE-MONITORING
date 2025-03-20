@@ -117,7 +117,7 @@ if uploaded_file is not None:
         # Overall Predictive Summary Table
         def calculate_predictive_summary(df):
             summary_table = pd.DataFrame(columns=[ 
-                'Day', 'ACCOUNTS', 'TOTAL DIALED', 'PENETRATION RATE (%)', 'CONNECTED #', 
+                'Day', 'TOTAL COLLECTORS', 'ACCOUNTS', 'TOTAL DIALED', 'PENETRATION RATE (%)', 'CONNECTED #', 
                 'CONNECTED RATE (%)', 'CONNECTED ACC', 'PTP ACC', 'PTP RATE', 'TOTAL PTP AMOUNT', 
                 'TOTAL BALANCE', 'CALL DROP #', 'SYSTEM DROP', 'CALL DROP RATIO #'
             ]) 
