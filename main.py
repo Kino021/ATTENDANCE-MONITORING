@@ -28,6 +28,13 @@ def load_data(uploaded_file):
     # Display the column names to help with debugging
     st.write("Columns in the uploaded file:")
     st.write(df.columns.tolist())  # Display the list of column names
+    
+    # Convert 'Date' to datetime if it isn't already
+    if 'Date' in df.columns:
+        df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
+
+        # Exclude rows where the date is a Sunday (weekday() == 6)
+        df = df[df['Date'].dt.weekday != 6]  # 6 corresponds to Sunday
 
     return df
 
@@ -37,21 +44,21 @@ def process_data(df):
         st.error("Required columns 'First Login Time', 'Collector', or 'Access' are missing from the data.")
         return None
     
-    # Extract date only from 'First Login Time' (assuming it is in datetime format)
-    df['Login Date'] = pd.to_datetime(df['First Login Time'], errors='coerce').dt.date
+    # Extract the date from 'Date' column
+    df['DATE'] = df['Date'].dt.strftime('%d-%m-%Y')  # Format as "DD-MM-YYYY"
 
-    # Extract first name from 'Collector' (assuming the format is "First Last")
-    df['Collector'] = df['Collector'].apply(lambda x: x.split()[0] if isinstance(x, str) else '')
+    # Extract first name from 'Collector' column (assuming the format is "First Last")
+    df['COLLECTOR'] = df['Collector'].apply(lambda x: x.split()[0] if isinstance(x, str) else '')
 
     # Extract access type (assuming values are like 'Collector', 'Collector (All Accounts)', etc.)
-    df['Access'] = df['Access'].apply(lambda x: x.split()[0] if isinstance(x, str) else '')
+    df['ACCESS'] = df['Access'].apply(lambda x: x.split()[0] if isinstance(x, str) else '')
 
     # Extract time from 'First Login Time' (assuming it is in datetime format)
-    df['First Login Time'] = pd.to_datetime(df['First Login Time'], errors='coerce').dt.strftime('%H:%M:%S')
+    df['FIRST LOG IN'] = pd.to_datetime(df['First Login Time'], errors='coerce').dt.strftime('%H:%M:%S')
 
     # Determine if "On Time" or "Late" based on login time
     def check_on_time(row):
-        login_time = pd.to_datetime(row['First Login Time'], format='%H:%M:%S').time()
+        login_time = pd.to_datetime(row['FIRST LOG IN'], format='%H:%M:%S').time()
         
         # Define the two schedules
         schedule_1 = pd.to_datetime('08:00:00', format='%H:%M:%S').time()
@@ -67,10 +74,10 @@ def process_data(df):
             return 'LATE'
         return 'UNKNOWN'
 
-    df['On Time or Late'] = df.apply(check_on_time, axis=1)
+    df['ON TIME OR LATE'] = df.apply(check_on_time, axis=1)
 
     # Select only relevant columns for the summary
-    summary_df = df[['Login Date', 'Collector', 'Access', 'First Login Time', 'On Time or Late']]
+    summary_df = df[['DATE', 'COLLECTOR', 'ACCESS', 'FIRST LOG IN', 'ON TIME OR LATE']]
 
     return summary_df
 
