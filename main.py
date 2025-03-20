@@ -25,10 +25,6 @@ st.title('Daily Remark Summary')
 def load_data(uploaded_file):
     df = pd.read_excel(uploaded_file)
 
-    # Print the column names to debug
-    st.write("Column names in the uploaded file:")
-    st.write(df.columns)
-
     # Check if 'Date' column exists, and if not, print all columns
     if 'Date' not in df.columns:
         st.error("The 'Date' column was not found in the file. Please check the column names.")
