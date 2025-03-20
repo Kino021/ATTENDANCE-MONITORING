@@ -170,3 +170,51 @@ if uploaded_file is not None:
         st.write(overall_predictive_table)
         
         # Remaining summary functions can be handled in a similar manner as the predictive and manual summaries above.
+# Total Manual Summary Table
+def calculate_total_manual_summary(df):
+    summary_table = pd.DataFrame(columns=[ 
+        'TOTAL COLLECTORS', 'ACCOUNTS', 'TOTAL DIALED', 'PENETRATION RATE (%)', 'CONNECTED #', 
+        'CONNECTED RATE (%)', 'CONNECTED ACC', 'PTP ACC', 'PTP RATE', 'TOTAL PTP AMOUNT', 
+        'TOTAL BALANCE', 'CALL DROP #', 'SYSTEM DROP', 'CALL DROP RATIO #'
+    ]) 
+
+    # Filter the dataframe to include only 'Outgoing' Remark Type
+    df_filtered = df[df['Remark Type'] == 'Outgoing']
+
+    # Calculate total collectors by counting unique values in 'Remark By', excluding 'SYSTEM'
+    total_collectors = df_filtered[~df_filtered['Remark By'].str.contains('SYSTEM', case=False, na=False)]['Remark By'].nunique()
+
+    accounts = df_filtered['Account No.'].nunique()
+    total_dialed = df_filtered['Account No.'].count()
+    connected = df_filtered[df_filtered['Call Status'] == 'CONNECTED']['Account No.'].nunique()
+    penetration_rate = (total_dialed / accounts * 100) if accounts != 0 else None
+    connected_acc = df_filtered[df_filtered['Call Status'] == 'CONNECTED']['Account No.'].count()
+    connected_rate = (connected_acc / total_dialed * 100) if total_dialed != 0 else None
+    ptp_acc = df_filtered[(df_filtered['Status'].str.contains('PTP', na=False)) & (df_filtered['PTP Amount'] != 0)]['Account No.'].nunique()
+    ptp_rate = (ptp_acc / connected * 100) if connected != 0 else None
+    total_ptp_amount = df_filtered[(df_filtered['Status'].str.contains('PTP', na=False)) & (df_filtered['PTP Amount'] != 0)]['PTP Amount'].sum()
+    total_balance = df_filtered[(df_filtered['PTP Amount'] != 0)]['Balance'].sum()
+    system_drop = df_filtered[(df_filtered['Status'].str.contains('DROPPED', na=False)) & (df_filtered['Remark By'] == 'SYSTEM')]['Account No.'].count()
+    call_drop_count = df_filtered[(df_filtered['Status'].str.contains('NEGATIVE CALLOUTS - DROP CALL', na=False)) & 
+                                  (~df_filtered['Remark By'].str.upper().isin(['SYSTEM']))]['Account No.'].count()
+    call_drop_ratio = (call_drop_count / connected_acc * 100) if connected_acc != 0 else None
+
+    # Append the results to the summary table
+    summary_table = pd.concat([summary_table, pd.DataFrame([{
+        'TOTAL COLLECTORS': total_collectors,
+        'ACCOUNTS': accounts,
+        'TOTAL DIALED': total_dialed,
+        'PENETRATION RATE (%)': f"{round(penetration_rate)}%" if penetration_rate is not None else None,
+        'CONNECTED #': connected,
+        'CONNECTED RATE (%)': f"{round(connected_rate)}%" if connected_rate is not None else None,
+        'CONNECTED ACC': connected_acc,
+        'PTP ACC': ptp_acc,
+        'PTP RATE': f"{round(ptp_rate)}%" if ptp_rate is not None else None,
+        'TOTAL PTP AMOUNT': total_ptp_amount,
+        'TOTAL BALANCE': total_balance,
+        'CALL DROP #': call_drop_count,
+        'SYSTEM DROP': system_drop,
+        'CALL DROP RATIO #': f"{round(call_drop_ratio)}%" if call_drop_ratio is not None else None,
+    }])], ignore_index=True)
+
+    return summary_table
