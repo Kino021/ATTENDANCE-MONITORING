@@ -89,7 +89,6 @@ if uploaded_file is not None:
                 summary_table = pd.concat([summary_table, pd.DataFrame([{
                     'Day': date,
                     'ACCOUNTS': accounts,
-                    'TOTAL COLLECTORS': total_collectors,
                     'TOTAL DIALED': total_dialed,
                     'PENETRATION RATE (%)': f"{round(penetration_rate)}%" if penetration_rate is not None else None,
                     'CONNECTED #': connected,
@@ -105,7 +104,7 @@ if uploaded_file is not None:
                 }])], ignore_index=True)
 
             return summary_table
-            
+
         # Display Combined Summary Table
         st.write("## Overall Combined Summary Table")
         combined_summary_table = calculate_combined_summary(df)
@@ -114,7 +113,7 @@ if uploaded_file is not None:
         # Overall Predictive Summary Table
         def calculate_predictive_summary(df):
             summary_table = pd.DataFrame(columns=[ 
-                'Day', 'TOTAL COLLECTORS', 'ACCOUNTS', 'TOTAL DIALED', 'PENETRATION RATE (%)', 'CONNECTED #', 
+                'Day', 'ACCOUNTS', 'TOTAL DIALED', 'PENETRATION RATE (%)', 'CONNECTED #', 
                 'CONNECTED RATE (%)', 'CONNECTED ACC', 'PTP ACC', 'PTP RATE', 'TOTAL PTP AMOUNT', 
                 'TOTAL BALANCE', 'CALL DROP #', 'SYSTEM DROP', 'CALL DROP RATIO #'
             ]) 
@@ -123,9 +122,6 @@ if uploaded_file is not None:
             df_filtered = df[df['Remark Type'].isin(['Predictive', 'Follow Up'])]
 
             for date, group in df_filtered.groupby(df_filtered['Date'].dt.date):
-                # Calculate total collectors by counting unique values in 'Remark By', excluding 'SYSTEM'
-                total_collectors = group[~group['Remark By'].str.contains('SYSTEM', case=False, na=False)]['Remark By'].nunique()
-                
                 accounts = group[group['Remark Type'].isin(['Predictive', 'Follow Up'])]['Account No.'].nunique()
                 total_dialed = group[group['Remark Type'].isin(['Predictive', 'Follow Up'])]['Account No.'].count()
                 connected = group[group['Call Status'] == 'CONNECTED']['Account No.'].nunique()
@@ -144,7 +140,6 @@ if uploaded_file is not None:
                 summary_table = pd.concat([summary_table, pd.DataFrame([{
                     'Day': date,
                     'ACCOUNTS': accounts,
-                    'TOTAL COLLECTORS': total_collectors,
                     'TOTAL DIALED': total_dialed,
                     'PENETRATION RATE (%)': f"{round(penetration_rate)}%" if penetration_rate is not None else None,
                     'CONNECTED #': connected,
@@ -166,10 +161,10 @@ if uploaded_file is not None:
         overall_predictive_table = calculate_predictive_summary(df)
         st.write(overall_predictive_table)
 
-        # Total Manual Summary Table
+        # Overall Manual Summary Table
         def calculate_manual_summary(df):
             summary_table = pd.DataFrame(columns=[ 
-                'TOTAL COLLECTORS', 'ACCOUNTS', 'TOTAL DIALED', 'PENETRATION RATE (%)', 'CONNECTED #', 
+                'Day', 'ACCOUNTS', 'TOTAL DIALED', 'PENETRATION RATE (%)', 'CONNECTED #', 
                 'CONNECTED RATE (%)', 'CONNECTED ACC', 'PTP ACC', 'PTP RATE', 'TOTAL PTP AMOUNT', 
                 'TOTAL BALANCE', 'CALL DROP #', 'SYSTEM DROP', 'CALL DROP RATIO #'
             ]) 
@@ -177,26 +172,25 @@ if uploaded_file is not None:
             # Filter the dataframe to include only 'Outgoing' Remark Type
             df_filtered = df[df['Remark Type'] == 'Outgoing']
 
-            total_collectors = df_filtered[~df_filtered['Remark By'].str.contains('SYSTEM', case=False, na=False)]['Remark By'].nunique()
-            accounts = df_filtered['Account No.'].nunique()
-            total_dialed = df_filtered['Account No.'].count()
-            connected = df_filtered[df_filtered['Call Status'] == 'CONNECTED']['Account No.'].nunique()
-            penetration_rate = (total_dialed / accounts * 100) if accounts != 0 else None
-            connected_acc = df_filtered[df_filtered['Call Status'] == 'CONNECTED']['Account No.'].count()
-            connected_rate = (connected_acc / total_dialed * 100) if total_dialed != 0 else None
-            ptp_acc = df_filtered[(df_filtered['Status'].str.contains('PTP', na=False)) & (df_filtered['PTP Amount'] != 0)]['Account No.'].nunique()
-            ptp_rate = (ptp_acc / connected * 100) if connected != 0 else None
-            total_ptp_amount = df_filtered[(df_filtered['Status'].str.contains('PTP', na=False)) & (df_filtered['PTP Amount'] != 0)]['PTP Amount'].sum()
-            total_balance = df_filtered[(df_filtered['PTP Amount'] != 0)]['Balance'].sum()
-            system_drop = df_filtered[(df_filtered['Status'].str.contains('DROPPED', na=False)) & (df_filtered['Remark By'] == 'SYSTEM')]['Account No.'].count()
-            call_drop_count = df_filtered[(df_filtered['Status'].str.contains('NEGATIVE CALLOUTS - DROP CALL', na=False)) & 
-                                          (~df_filtered['Remark By'].str.upper().isin(['SYSTEM']))]['Account No.'].count()
-            call_drop_ratio = (call_drop_count / connected_acc * 100) if connected_acc != 0 else None
+            for date, group in df_filtered.groupby(df_filtered['Date'].dt.date):
+                accounts = group[group['Remark Type'] == 'Outgoing']['Account No.'].nunique()
+                total_dialed = group[group['Remark Type'] == 'Outgoing']['Account No.'].count()
+                connected = group[group['Call Status'] == 'CONNECTED']['Account No.'].nunique()
+                penetration_rate = (total_dialed / accounts * 100) if accounts != 0 else None
+                connected_acc = group[group['Call Status'] == 'CONNECTED']['Account No.'].count()
+                connected_rate = (connected_acc / total_dialed * 100) if total_dialed != 0 else None
+                ptp_acc = group[(group['Status'].str.contains('PTP', na=False)) & (group['PTP Amount'] != 0)]['Account No.'].nunique()
+                ptp_rate = (ptp_acc / connected * 100) if connected != 0 else None
+                total_ptp_amount = group[(group['Status'].str.contains('PTP', na=False)) & (group['PTP Amount'] != 0)]['PTP Amount'].sum()
+                total_balance = group[(group['PTP Amount'] != 0)]['Balance'].sum()  # Calculate total balance when PTP Amount exists
+                system_drop = group[(group['Status'].str.contains('DROPPED', na=False)) & (group['Remark By'] == 'SYSTEM')]['Account No.'].count()
+                call_drop_count = group[(group['Status'].str.contains('NEGATIVE CALLOUTS - DROP CALL', na=False)) & 
+                                        (~group['Remark By'].str.upper().isin(['SYSTEM']))]['Account No.'].count()
+                call_drop_ratio = (call_drop_count / connected_acc * 100) if connected_acc != 0 else None
 
-            summary_table = pd.concat([summary_table, pd.DataFrame([{
+                summary_table = pd.concat([summary_table, pd.DataFrame([{
                     'Day': date,
                     'ACCOUNTS': accounts,
-                    'TOTAL COLLECTORS': total_collectors,
                     'TOTAL DIALED': total_dialed,
                     'PENETRATION RATE (%)': f"{round(penetration_rate)}%" if penetration_rate is not None else None,
                     'CONNECTED #': connected,
@@ -209,11 +203,11 @@ if uploaded_file is not None:
                     'CALL DROP #': call_drop_count,
                     'SYSTEM DROP': system_drop,
                     'CALL DROP RATIO #': f"{round(call_drop_ratio)}%" if call_drop_ratio is not None else None,
-            }])], ignore_index=True)
+                }])], ignore_index=True)
 
             return summary_table
 
         # Display Overall Manual Summary Table
-        st.write("## Total Manual Summary Table")
+        st.write("## Overall Manual Summary Table")
         overall_manual_table = calculate_manual_summary(df)
         st.write(overall_manual_table)
