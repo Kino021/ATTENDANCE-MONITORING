@@ -23,9 +23,10 @@ st.title('Daily Remark Summary')
 
 @st.cache_data
 def load_data(uploaded_file):
+    # Load the uploaded Excel file into a DataFrame
     df = pd.read_excel(uploaded_file)
 
-    # Display the column names to help with debugging
+    # Display column names to help debug
     st.write("Columns in the uploaded file:")
     st.write(df.columns.tolist())  # Display the list of column names
 
