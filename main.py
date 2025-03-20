@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 
-st.set_page_config(layout="wide", page_title="ACTIVITY LOG", page_icon="📊", initial_sidebar_state="expanded")
+st.set_page_config(layout="wide", page_title="Daily Remark Summary", page_icon="📊", initial_sidebar_state="expanded")
 
 # Apply dark mode
 st.markdown(
@@ -19,11 +19,20 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-st.title('ACTIVITY LOG')
+st.title('Daily Remark Summary')
 
 @st.cache_data
 def load_data(uploaded_file):
     df = pd.read_excel(uploaded_file)
+
+    # Display the column names to help with debugging
+    st.write("Columns in the uploaded file:")
+    st.write(df.columns.tolist())
+
+    # Check if 'Date' column exists
+    if 'Date' not in df.columns:
+        st.error("The 'Date' column was not found in the uploaded file.")
+        return None
 
     # Convert 'Date' to datetime if it isn't already
     df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
@@ -34,6 +43,11 @@ def load_data(uploaded_file):
     return df
 
 def process_data(df):
+    # Check if required columns exist
+    if 'First Login Time' not in df.columns or 'Collector' not in df.columns or 'Access' not in df.columns:
+        st.error("Required columns 'First Login Time', 'Collector', or 'Access' are missing from the data.")
+        return None
+    
     # Extract date only from 'First Login Time' (assuming it is in datetime format)
     df['Login Date'] = pd.to_datetime(df['First Login Time'], errors='coerce').dt.date
 
@@ -75,7 +89,11 @@ uploaded_file = st.sidebar.file_uploader("Upload Daily Remark File", type="xlsx"
 
 if uploaded_file:
     df = load_data(uploaded_file)
-    summary_df = process_data(df)
     
-    # Display the summary table
-    st.write(summary_df)
+    # Only proceed if data is valid
+    if df is not None:
+        summary_df = process_data(df)
+        
+        # Only display the summary table if processing is successful
+        if summary_df is not None:
+            st.write(summary_df)
