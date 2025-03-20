@@ -27,18 +27,7 @@ def load_data(uploaded_file):
 
     # Display the column names to help with debugging
     st.write("Columns in the uploaded file:")
-    st.write(df.columns.tolist())
-
-    # Check if 'Date' column exists
-    if 'Date' not in df.columns:
-        st.error("The 'Date' column was not found in the uploaded file.")
-        return None
-
-    # Convert 'Date' to datetime if it isn't already
-    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
-
-    # Exclude rows where the date is a Sunday (weekday() == 6)
-    df = df[df['Date'].dt.weekday != 6]  # 6 corresponds to Sunday
+    st.write(df.columns.tolist())  # Display the list of column names
 
     return df
 
