@@ -168,10 +168,12 @@ if uploaded_file is not None:
         st.write("## Overall Predictive Summary Table")
         overall_predictive_table = calculate_predictive_summary(df)
         st.write(overall_predictive_table)
-        
+        overall_manual_table = calculate_manual_summary(df)
+        st.write(overall_manual_table)
+
         # Remaining summary functions can be handled in a similar manner as the predictive and manual summaries above.
-# Total Manual Summary Table
-def calculate_total_manual_summary(df):
+        # Total Manual Summary Table
+        def calculate_total_manual_summary(df):
     summary_table = pd.DataFrame(columns=[ 
         'TOTAL COLLECTORS', 'ACCOUNTS', 'TOTAL DIALED', 'PENETRATION RATE (%)', 'CONNECTED #', 
         'CONNECTED RATE (%)', 'CONNECTED ACC', 'PTP ACC', 'PTP RATE', 'TOTAL PTP AMOUNT', 
@@ -218,3 +220,10 @@ def calculate_total_manual_summary(df):
     }])], ignore_index=True)
 
     return summary_table
+
+        # Display Overall Predictive Summary Table
+        st.write("## Overall Predictive Summary Table")
+        overall_predictive_table = calculate_predictive_summary(df)
+        st.write(overall_predictive_table)
+        overall_manual_table = calculate_manual_summary(df)
+        st.write(overall_manual_table)
